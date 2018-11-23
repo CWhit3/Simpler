@@ -19,6 +19,7 @@
 
 //[Headers] You can add your own extra header files here...
 #include "Tag.h"
+#include "AudioThumbnailTutorial_04.h"
 #include <vector>
 using namespace std;
 //[/Headers]
@@ -28,13 +29,16 @@ using namespace std;
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
 vector<Tag*> tagSet;
+vector<double> waveformMarkers;
 //[/MiscUserDefs]
 
 //==============================================================================
 FrontEnd::FrontEnd ()
 {
     //[Constructor_pre] You can add your own custom stuff here..
-    tagResizer.reset (new StretchableObjectResizer());
+    waveformEditor = new MainContentComponent();
+    waveformEditor->setBounds(8, 216, 584, 176);
+    addAndMakeVisible(waveformEditor);
     //[/Constructor_pre]
 
     addTagButton.reset (new ImageButton ("addTagButton"));
@@ -97,7 +101,7 @@ FrontEnd::FrontEnd ()
                                 ImageCache::getFromMemory (plus_button_up_png, plus_button_up_pngSize), 1.000f, Colour (0x00000000),
                                 ImageCache::getFromMemory (plus_button_up_png, plus_button_up_pngSize), 1.000f, Colour (0x00000000),
                                 ImageCache::getFromMemory (plus_button_down_png, plus_button_down_pngSize), 1.000f, Colour (0x00000000));
-    addMarkerButton->setBounds (560, 360, 24, 24);
+    addMarkerButton->setBounds (560, 361, 24, 24);
 
     saveAllSlicesButton.reset (new TextButton ("saveAllSlicesButton"));
     addAndMakeVisible (saveAllSlicesButton.get());
@@ -129,6 +133,24 @@ FrontEnd::FrontEnd ()
 
     currentSliceAutogenTitle->setBounds (168, 104, 416, 19);
 
+    tagRenameEditor.reset (new TextEditor ("tagRenameEditor"));
+    addAndMakeVisible (tagRenameEditor.get());
+    tagRenameEditor->setMultiLine (false);
+    tagRenameEditor->setReturnKeyStartsNewLine (false);
+    tagRenameEditor->setReadOnly (false);
+    tagRenameEditor->setScrollbarsShown (false);
+    tagRenameEditor->setCaretVisible (true);
+    tagRenameEditor->setPopupMenuEnabled (true);
+    tagRenameEditor->setColour (TextEditor::textColourId, Colour (0xffcdcdcd));
+    tagRenameEditor->setColour (TextEditor::backgroundColourId, Colours::white);
+    tagRenameEditor->setColour (TextEditor::highlightColourId, Colour (0xffb4a7d6));
+    tagRenameEditor->setColour (TextEditor::outlineColourId, Colour (0xffcdcdcd));
+    tagRenameEditor->setColour (TextEditor::shadowColourId, Colours::white);
+    tagRenameEditor->setColour (CaretComponent::caretColourId, Colour (0xffb4a7d6));
+    tagRenameEditor->setText (TRANS("rename selected tag"));
+
+    tagRenameEditor->setBounds (16, 160, 536, 16);
+
 
     //[UserPreSize]
     //[/UserPreSize]
@@ -144,6 +166,7 @@ FrontEnd::~FrontEnd()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
     tagSet.clear();
+    waveformEditor = nullptr;
     //[/Destructor_pre]
 
     addTagButton = nullptr;
@@ -154,6 +177,7 @@ FrontEnd::~FrontEnd()
     saveAllSlicesButton = nullptr;
     manualSaveButton = nullptr;
     currentSliceAutogenTitle = nullptr;
+    tagRenameEditor = nullptr;
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -270,11 +294,9 @@ void FrontEnd::buttonClicked (Button* buttonThatWasClicked)
     if (buttonThatWasClicked == addTagButton.get())
     {
         //[UserButtonCode_addTagButton] -- add your button handler code here..
-
+        tagRenameEditor->setText("");
         if(tagSet.size() < 8){
             Tag* newTag = new Tag();
-            newTag->setText("Test");
-            newTag->setButtonText("Test");
             tagSet.push_back(newTag);
             reorganizeTags();
         }
@@ -284,6 +306,8 @@ void FrontEnd::buttonClicked (Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == addMarkerButton.get())
     {
         //[UserButtonCode_addMarkerButton] -- add your button handler code here..
+        waveformEditor->addMarkerAtCurrentPosition();
+        waveformEditor->repaint();
         //[/UserButtonCode_addMarkerButton]
     }
     else if (buttonThatWasClicked == saveAllSlicesButton.get())
@@ -316,18 +340,6 @@ void FrontEnd::mouseDrag (const MouseEvent& e)
 void FrontEnd::mouseDoubleClick (const MouseEvent& e)
 {
     //[UserCode_mouseDoubleClick] -- Add your code here...
-    
-    vector<Tag*>::iterator tagIterator = tagSet.begin();
-    for(int i = 0; i < tagSet.size(); i++){
-        
-        if(tagSet[i]->hitTest(e.getMouseDownX(), e.getMouseDownY()))
-        {
-                tagSet.erase(tagIterator);
-                reorganizeTags();
-                break;
-        }
-        tagIterator++;
-    }
     //[/UserCode_mouseDoubleClick]
 }
 
@@ -335,40 +347,97 @@ void FrontEnd::mouseDoubleClick (const MouseEvent& e)
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 
-void FrontEnd:: reorganizeTags(){
+void FrontEnd:: deleteTag(Tag* t){
 
-    //make sure that number of items in resizers are equal, then calculate the optimal width of each
-    //tag in order to fit in allotted area
-    if(tagResizer->getNumItems() != tagSet.size())
-    {
-        tagResizer->addItem(tagSet[0]->getWidth(), 50, 104);
+    vector<Tag*>::iterator tagIterator = tagSet.begin();
+
+    for(int i = 0; i < tagSet.size(); i++){
+        if(tagSet[i] == tagToDelete)
+        {
+            tagSet.erase(tagIterator);
+            reorganizeTags();
+            break;
+        }
+        tagIterator++;
     }
-    tagResizer->resizeToFit(515);
-    double fittedTagWidth = tagResizer->getItemSize(0);
-    
+}
+
+void FrontEnd:: renameTag(Tag* t){
+    String newText = tagRenameEditor->getText();
+    if(newText.isNotEmpty()){
+        t->setText(tagRenameEditor->getText());
+        t->repaint();
+        tagRenameEditor->setText("");
+    }
+}
+
+void FrontEnd:: resizeTags(){
+
+    //if tagSet isn't empty, set each tag's width to be the total area divided by the number
+    //of tags available
+    if(!tagSet.empty())
+        fittedTagWidth = 530/tagSet.size();
+
+    //if no tags are available, set the tag width to 0
+    else
+        fittedTagWidth = 0;
+
+    //iterate over the tags and set their widths and x posiitions to reflect the number of tags there are
+    for(int i = 0; i < tagSet.size(); i++){
+        tagSet[i]->setBounds(16 + i * (fittedTagWidth + 2), 136, fittedTagWidth, 24);
+        addAndMakeVisible(tagSet[i]);
+    }
+}
+
+void FrontEnd:: updateAutogenLabel(){
     //reinitialize slice title as empty string so that it can be appended to based on order of tags
     String titleFromTags= "";
 
-    //iterate over tags and set size, location, and text of each
-    //also append to titleFromTags in order of buttons so that titleFromTags reflects the horizontal
-    //ordering of buttons. Note that in future when buttons are clicked and dragged horizontally,
-    //this will automatically be reflected in titleFromTags
-    for(int i = 0; i < tagSet.size(); i++){
-        tagSet[i]->setBounds(16 + i * (fittedTagWidth + 2), 136, fittedTagWidth, 24);
-        this -> addAndMakeVisible(tagSet[i]);
-
-        //append each tag's text to autogenerated filename, separating with spaces until the last entry
-        if(i != tagSet.size() - 1)
-        {
-            titleFromTags.append((tagSet[i]->getText()), 25);
-            titleFromTags.append(" ", 1);
-        }
-        else
-        {
-            titleFromTags.append(tagSet[i]->getText(), 25);
-        }
-        currentSliceAutogenTitle->setText(titleFromTags + ".wav", juce::dontSendNotification);
+    //set autogen label to read "[No tags available]" when none have been created
+    if(tagSet.size() == 0){
+        titleFromTags = "[No tags available]";
     }
+    else
+    {
+        //iterate over all current tags
+        for(int i = 0; i < tagSet.size(); i++){
+
+            //append each tag's (custom) text to autogenerated filename
+            if(tagSet[i]->getText() != "click to rename"){
+
+                //if the tag being read from is not the final tag, add a space between words
+                if(i != tagSet.size() - 1)
+                {
+                    titleFromTags.append((tagSet[i]->getText()), 25);
+                    titleFromTags.append(" ", 1);
+                }
+
+                //if this is the final tag, do not add a space after its name is appended
+                else
+                {
+                    titleFromTags.append(tagSet[i]->getText(), 25);
+                }
+            }
+        }
+        titleFromTags.append(".wav", 4);
+    }
+
+    //set the label's text value to the generated string from the tag names
+    currentSliceAutogenTitle->setText(titleFromTags, juce::dontSendNotification);
+}
+
+void FrontEnd:: reorganizeTags(){
+    //handle any tag deletion that needs to occur from double-clicks on a tag
+    if(tagToDelete != nullptr) deleteTag(tagToDelete);
+
+    //handle any tag renaming that needs to occur from single-clicks on a tag
+    if(tagToRename != nullptr) renameTag(tagToRename);
+
+    //resize whatever number of tags there currently are to fit within their area
+    resizeTags();
+
+    //update label based on tags' current order & names
+    updateAutogenLabel();
 }
 
 //[/MiscUserCode]
@@ -435,7 +504,7 @@ BEGIN_JUCER_METADATA
          fontname="Avenir Next" fontsize="17.30000000000000071054" kerning="0.00000000000000000000"
          bold="0" italic="0" justification="33"/>
   <IMAGEBUTTON name="addMarkerButton" id="b164ecad590dba5f" memberName="addMarkerButton"
-               virtualName="" explicitFocusOrder="0" pos="560 360 24 24" tooltip="Add a new marker to sample"
+               virtualName="" explicitFocusOrder="0" pos="560 361 24 24" tooltip="Add a new marker to sample"
                buttonText="Add Label" connectedEdges="0" needsCallback="1" radioGroupId="0"
                keepProportions="1" resourceNormal="plus_button_up_png" opacityNormal="1.00000000000000000000"
                colourNormal="0" resourceOver="plus_button_up_png" opacityOver="1.00000000000000000000"
@@ -455,6 +524,12 @@ BEGIN_JUCER_METADATA
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Avenir Next" fontsize="17.30000000000000071054" kerning="0.00000000000000000000"
          bold="0" italic="0" justification="33"/>
+  <TEXTEDITOR name="tagRenameEditor" id="af484b5591433d4b" memberName="tagRenameEditor"
+              virtualName="" explicitFocusOrder="0" pos="16 160 536 16" textcol="ffcdcdcd"
+              bkgcol="ffffffff" hilitecol="ffb4a7d6" outlinecol="ffcdcdcd"
+              shadowcol="ffffffff" caretcol="ffb4a7d6" initialText="rename selected tag"
+              multiline="0" retKeyStartsLine="0" readonly="0" scrollbars="0"
+              caret="1" popupmenu="1"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

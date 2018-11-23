@@ -22,6 +22,7 @@
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "Tag.h"
+#include "AudioThumbnailTutorial_04.h"
 //[/Headers]
 
 
@@ -29,9 +30,9 @@
 //==============================================================================
 /**
                                                                     //[Comments]
-    An auto-generated component, created by the Projucer.
+ An auto-generated component, created by the Projucer.
 
-    Describe your class and how it works here!
+ Describe your class and how it works here!
                                                                     //[/Comments]
 */
 class FrontEnd  : public Component,
@@ -45,6 +46,13 @@ public:
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
     void reorganizeTags();
+    void deleteTag(Tag* t);
+    void renameTag(Tag* t);
+    void resizeTags();
+    void updateAutogenLabel();
+
+    Tag* tagToDelete;
+    Tag* tagToRename;
     //[/UserMethods]
 
     void paint (Graphics& g) override;
@@ -67,7 +75,8 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-    std::unique_ptr<StretchableObjectResizer> tagResizer;
+    double fittedTagWidth;
+    MainContentComponent* waveformEditor;
     //[/UserVariables]
 
     //==============================================================================
@@ -79,6 +88,7 @@ private:
     std::unique_ptr<TextButton> saveAllSlicesButton;
     std::unique_ptr<TextButton> manualSaveButton;
     std::unique_ptr<Label> currentSliceAutogenTitle;
+    std::unique_ptr<TextEditor> tagRenameEditor;
 
 
     //==============================================================================

@@ -34,7 +34,7 @@
     Describe your class and how it works here!
                                                                     //[/Comments]
 */
-class Tag  : public TextButton
+class Tag  : public Component
 {
 public:
     //==============================================================================

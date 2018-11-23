@@ -34,6 +34,7 @@
 Tag::Tag ()
 {
     //[Constructor_pre] You can add your own custom stuff here..
+    buttonText = "click to rename";
     //[/Constructor_pre]
 
 
@@ -79,7 +80,7 @@ void Tag::paint (Graphics& g)
     //DRAW TEXT ON BUTTON IN PLUGIN FONT
     {
     int x = proportionOfWidth (0.0000f), y = proportionOfHeight (0.0000f), width = proportionOfWidth (1.0000f), height = proportionOfHeight (1.0000f);
-    Colour fillColour = Colours::white;
+        Colour fillColour = Colours::darkgrey;
     g.setColour (fillColour);
     g.setFont (Font ("Avenir Next", 20.00f, Font::plain).withTypefaceStyle ("Regular"));
     g.drawText (buttonText, x, y, width, height,
@@ -112,6 +113,9 @@ void Tag::mouseExit (const MouseEvent& e)
 void Tag::mouseDown (const MouseEvent& e)
 {
     //[UserCode_mouseDown] -- Add your code here...
+    FrontEnd* parent = (FrontEnd*)getParentComponent();
+    parent->tagToRename = this;
+    parent->reorganizeTags();
     //[/UserCode_mouseDown]
 }
 
@@ -124,6 +128,10 @@ void Tag::mouseDrag (const MouseEvent& e)
 void Tag::mouseDoubleClick (const MouseEvent& e)
 {
     //[UserCode_mouseDoubleClick] -- Add your code here...
+    FrontEnd* parent = (FrontEnd*)getParentComponent();
+    parent->tagToDelete = this;
+    parent->reorganizeTags();
+    delete this;
     //[/UserCode_mouseDoubleClick]
 }
 
