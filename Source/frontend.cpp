@@ -28,6 +28,8 @@ using namespace std;
 
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
+
+vector<vector<Tag*>> tagSetFromGivenSlice;
 vector<Tag*> tagSet;
 vector<double> waveformMarkers;
 //[/MiscUserDefs]
@@ -307,6 +309,7 @@ void FrontEnd::buttonClicked (Button* buttonThatWasClicked)
     {
         //[UserButtonCode_addMarkerButton] -- add your button handler code here..
         waveformEditor->addMarkerAtCurrentPosition();
+        tagSetFromGivenSlice.push_back(*new vector<Tag*>);
         waveformEditor->repaint();
         //[/UserButtonCode_addMarkerButton]
     }
@@ -427,6 +430,7 @@ void FrontEnd:: updateAutogenLabel(){
 }
 
 void FrontEnd:: reorganizeTags(){
+    
     //handle any tag deletion that needs to occur from double-clicks on a tag
     if(tagToDelete != nullptr) deleteTag(tagToDelete);
 

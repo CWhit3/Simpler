@@ -52,6 +52,7 @@
 
 
 
+
 //PLEASE NOTE THAT PORTIONS OF THIS CODE HAVE COME FROM AN EXAMPLE PROJECT PROVIDED
 //IN THE JUCE DOWNLOAD. AS STATED ABOVE IN THE HEADER WRITTEN BY JUCE, WE ARE ALLOWED
 //TO USE/MODIFY THIS CODE AS LONG AS THE ABOVE HEADER REMAINS
@@ -255,10 +256,14 @@ public:
                 indexOfLeftMarkerOfSlice = i;
             }
         }
+        transportSource.setPosition(waveformMarkers[indexOfLeftMarkerOfSlice]);
     }
-    
     void setTransportSourceLengthForFinalMarker(double lengthOfSampleInSeconds){
         waveformMarkers = {0.0f, lengthOfSampleInSeconds};
+    }
+    
+    int getSelectedSliceIndex(){
+        return indexOfLeftMarkerOfSlice;
     }
 
 private:
@@ -368,6 +373,10 @@ public:
     void addMarkerAtCurrentPosition(){
         positionOverlay.addMarkerAtCurrentPosition();
         positionOverlay.sortMarkers();
+    }
+    
+    int getSelectedSliceIndex(){
+        return positionOverlay.getSelectedSliceIndex();
     }
 
 private:

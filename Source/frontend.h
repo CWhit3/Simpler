@@ -50,9 +50,11 @@ public:
     void renameTag(Tag* t);
     void resizeTags();
     void updateAutogenLabel();
+    void switchTagsToCurrentSlice(int index);
 
     Tag* tagToDelete;
     Tag* tagToRename;
+    int currentSliceIndex;
     //[/UserMethods]
 
     void paint (Graphics& g) override;
