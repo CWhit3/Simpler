@@ -20,6 +20,7 @@
 //[Headers] You can add your own extra header files here...
 #include "Tag.h"
 #include "AudioThumbnailTutorial_04.h"
+#include <map>
 #include <vector>
 using namespace std;
 //[/Headers]
@@ -29,18 +30,34 @@ using namespace std;
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
 
-vector<vector<Tag*>> tagSetFromGivenSlice;
+
+//PUBLIC USER VARIABLES
+
+//map of the index of a slice of the sample selected
+//and the associated set of tags for each slice
+//of the sample
+map<int, vector<Tag*>> tagSetFromGivenSlice;
+
+//the current set of tags being used for graphical updates and (eventually)
+//for the saving
 vector<Tag*> tagSet;
-vector<double> waveformMarkers;
+
 //[/MiscUserDefs]
 
 //==============================================================================
 FrontEnd::FrontEnd ()
 {
     //[Constructor_pre] You can add your own custom stuff here..
+
+    //creates a new instance of the main content component used for the
+    //waveform visualization and playhead + marker overlay as well as the
+    //logic for playing the audio
+    //NOTE: the majority of this class was created by JUCE as a sample project
+    //      and has been extended upon for use here
     waveformEditor = new MainContentComponent();
     waveformEditor->setBounds(8, 216, 584, 176);
     addAndMakeVisible(waveformEditor);
+    currentSliceIndex = -1;
     //[/Constructor_pre]
 
     addTagButton.reset (new ImageButton ("addTagButton"));
@@ -168,7 +185,7 @@ FrontEnd::~FrontEnd()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
     tagSet.clear();
-    waveformEditor = nullptr;
+    waveformEditor->~MainContentComponent();
     //[/Destructor_pre]
 
     addTagButton = nullptr;
@@ -282,6 +299,11 @@ void FrontEnd::paint (Graphics& g)
 void FrontEnd::resized()
 {
     //[UserPreResize] Add your own custom resize code here..
+    
+    //Overriden resize function that was automatically created by the
+    //Projucer software in spite of the fact that Simpler has a fixed 600x400
+    //size, therefore there is no implementation of this method currently
+    
     //[/UserPreResize]
 
     //[UserResized] Add your own custom resize handling here..
@@ -296,21 +318,35 @@ void FrontEnd::buttonClicked (Button* buttonThatWasClicked)
     if (buttonThatWasClicked == addTagButton.get())
     {
         //[UserButtonCode_addTagButton] -- add your button handler code here..
-        tagRenameEditor->setText("");
+
+        //if the tag set for the currently selected slice has less than 8
+        //tag descriptors and the user is attempting to create a new tag,
+        //create it, push it to the vector currently selected for the slice's tags
+        //and graphically update the frontend component's tagging system
         if(tagSet.size() < 8){
+            tagRenameEditor->setText("");
             Tag* newTag = new Tag();
             tagSet.push_back(newTag);
             reorganizeTags();
         }
-
         //[/UserButtonCode_addTagButton]
     }
     else if (buttonThatWasClicked == addMarkerButton.get())
     {
         //[UserButtonCode_addMarkerButton] -- add your button handler code here..
+
+        //if the user attempts to create a new marker over the sample,
+        //call addMarkerAtCurrentPosition, which draws it graphically
+        //within the context of the SimplePositionOverlay object in
+        //AudioThumbnailTutorial_04 by passing it through the MainContentComponent
+        //instance "waveformEditor" being used here. Check documentation in
+        //AudioThumbnailTutorial_04.h for more information
+        //LATER EXPLAIN LOGIC OF ADDING VECTORS TO MAP WHEN IT WORKS CORRECTLY
         waveformEditor->addMarkerAtCurrentPosition();
-        tagSetFromGivenSlice.push_back(*new vector<Tag*>);
-        waveformEditor->repaint();
+        currentSliceIndex = waveformEditor->getSelectedSliceIndex();
+        tagSetFromGivenSlice.insert(std::map<int, vector<Tag*>>::value_type(currentSliceIndex, *new vector<Tag*>));
+        reorganizeTags();
+        repaint();
         //[/UserButtonCode_addMarkerButton]
     }
     else if (buttonThatWasClicked == saveAllSlicesButton.get())
@@ -331,6 +367,11 @@ void FrontEnd::buttonClicked (Button* buttonThatWasClicked)
 void FrontEnd::mouseDown (const MouseEvent& e)
 {
     //[UserCode_mouseDown] -- Add your code here...
+
+    //DEBUGGING CODE FOR TESTING TAG SET SELECTION DUE TO INABILITY TO ACCESS PUBLIC
+    //FUNCTIONS OF FRONTEND IN THE AUDIOTHUMBNAILTUTORIAL_04
+    reorganizeTags();
+
     //[/UserCode_mouseDown]
 }
 
@@ -350,6 +391,15 @@ void FrontEnd::mouseDoubleClick (const MouseEvent& e)
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 
+//Helper method called in the more general "reorganizeTags" method. this method specifically
+//iterates through the current tag set and, if the public field tagToDelete has been set to something
+//by an instance of a Tag (this implementation is because handling mouseDoubleClick() for a tag
+//so that the tag is deleted was next to impossible to do graphically from solely in the Tag class
+//so my compromise was to have a public field that can be set as "this" by a tag that has been double clicked
+//this is also why reorganizeTags is public, it is called by other classes in order to graphically update the tagging
+//system whenever changes occur during renaming, deleting, changing tag sets when a new slice is selected, etc.
+//There is most likely a less clunky way to do this but as it stands, this was the only implementation i could pull off
+//for dynamically updating the frontend when changes occur to its child components
 void FrontEnd:: deleteTag(Tag* t){
 
     vector<Tag*>::iterator tagIterator = tagSet.begin();
@@ -365,6 +415,9 @@ void FrontEnd:: deleteTag(Tag* t){
     }
 }
 
+//Similar to deleteTag, this method iterates over the tag set and, if it finds a tag in the current tag set that is equal
+//to the parameter, changes its name to the text value in the tagRenameEditor text editor. Check the description for
+//deleteTag for more information on why it is implemented this way.
 void FrontEnd:: renameTag(Tag* t){
     String newText = tagRenameEditor->getText();
     if(newText.isNotEmpty()){
@@ -374,6 +427,10 @@ void FrontEnd:: renameTag(Tag* t){
     }
 }
 
+//Dynamically resizes tags to fit within the 530 pixel wide area of the screen allotted for tags.
+//After calculating the width each tag should be, it iterates over the tagSet currently selected
+//and draws each of them, with some offsets for aesthetic purposes (starting 16 pixels from the left
+//and spacing out each tag by 2 pixels)
 void FrontEnd:: resizeTags(){
 
     //if tagSet isn't empty, set each tag's width to be the total area divided by the number
@@ -392,6 +449,10 @@ void FrontEnd:: resizeTags(){
     }
 }
 
+//Iterates over the current tagSet selected and updates the automatically generated label that shows
+//what that slice of the sample will be saved as upon batch-saving all slices of the sample with the
+//tags generated. If no tags are available (i.e. the tagSet size is 0), this is conveyed through the
+//autogenerated title
 void FrontEnd:: updateAutogenLabel(){
     //reinitialize slice title as empty string so that it can be appended to based on order of tags
     String titleFromTags= "";
@@ -429,8 +490,21 @@ void FrontEnd:: updateAutogenLabel(){
     currentSliceAutogenTitle->setText(titleFromTags, juce::dontSendNotification);
 }
 
+//Logic does not work currently, but this method should switch the variable "tagSet" to be
+//the vector of tags that is accessed in tagSetFromGivenSlice when using the key of the
+//number index of the sample the slice is from left to right. (e.g. when the first slice (index 0)
+//of the sample is selected by the user, the tagSet variable is updated to be tagSetFromGivenSlice[0]
+void FrontEnd:: switchTagsToCurrentSlice(){
+    currentSliceIndex = waveformEditor->getSelectedSliceIndex();
+    tagSet = tagSetFromGivenSlice.at(currentSliceIndex);
+}
+
 void FrontEnd:: reorganizeTags(){
-    
+
+    //does not work currently but is supposed to set the tagSet to whichever
+    //represents the currently selected slice of the sample
+    switchTagsToCurrentSlice();
+
     //handle any tag deletion that needs to occur from double-clicks on a tag
     if(tagToDelete != nullptr) deleteTag(tagToDelete);
 

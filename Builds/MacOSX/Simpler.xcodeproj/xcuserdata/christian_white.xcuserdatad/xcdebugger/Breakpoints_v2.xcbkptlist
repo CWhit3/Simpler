@@ -15,7 +15,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "266"
             endingLineNumber = "266"
-            landmarkName = "getSelectedSliceIndex()"
+            landmarkName = "setTransportSourceLengthForFinalMarker(double lengthOfSampleInSeconds)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

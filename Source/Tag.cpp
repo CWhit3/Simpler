@@ -66,7 +66,7 @@ void Tag::paint (Graphics& g)
     //[/UserPrePaint]
 
     //[UserPaint] Add your own custom painting code here..
-    
+
     //DRAW LILAC BUTTON BACKGROUND
     {
         float x = 0.0f, y = 0.0f, width = static_cast<float> (proportionOfWidth (1.0000f)), height = static_cast<float> (proportionOfHeight (1.0000f));
@@ -76,7 +76,7 @@ void Tag::paint (Graphics& g)
         g.setColour (fillColour);
         g.fillRoundedRectangle (x, y, width, height, 4.500f);
     }
-    
+
     //DRAW TEXT ON BUTTON IN PLUGIN FONT
     {
     int x = proportionOfWidth (0.0000f), y = proportionOfHeight (0.0000f), width = proportionOfWidth (1.0000f), height = proportionOfHeight (1.0000f);
@@ -98,21 +98,14 @@ void Tag::resized()
     //[/UserResized]
 }
 
-void Tag::mouseEnter (const MouseEvent& e)
-{
-    //[UserCode_mouseEnter] -- Add your code here...
-    //[/UserCode_mouseEnter]
-}
-
-void Tag::mouseExit (const MouseEvent& e)
-{
-    //[UserCode_mouseExit] -- Add your code here...
-    //[/UserCode_mouseExit]
-}
-
 void Tag::mouseDown (const MouseEvent& e)
 {
     //[UserCode_mouseDown] -- Add your code here...
+    
+    //When the tag is clicked, the field of the FrontEnd component tagToRename
+    //is set to this tag,meaning when renameTag() is called inside the reorganizeTags()
+    //function of FrontEnd,this tag will be renamed to whatever text value is in the 
+    //renameTagEditor text editor of FrontEnd
     FrontEnd* parent = (FrontEnd*)getParentComponent();
     parent->tagToRename = this;
     parent->reorganizeTags();
@@ -128,6 +121,10 @@ void Tag::mouseDrag (const MouseEvent& e)
 void Tag::mouseDoubleClick (const MouseEvent& e)
 {
     //[UserCode_mouseDoubleClick] -- Add your code here...
+    
+    //When the tag is double clicked, the field of the FrontEnd component tagToDelete
+    //is set to this tag,meaning when deleteTag() is called inside the reorganizeTags() 
+    //function of FrontEnd,this tag will be deleted both graphically and logically from tagSet
     FrontEnd* parent = (FrontEnd*)getParentComponent();
     parent->tagToDelete = this;
     parent->reorganizeTags();
@@ -142,11 +139,13 @@ void Tag::mouseDoubleClick (const MouseEvent& e)
 //Custom method for setting text of button to be drawn over its background
 //Note that this method is distinct from setButtonText(), which is not use due to
 //the inability to set the font of the text drawn without overriding the method
-//PARAMETER: the string to set this tag's text to
 void Tag::setText (const String& newText){
     buttonText = newText;
 }
 
+//A getter for the current text being written over the background of the button. This is used
+//when iterating over the current tagSet in FrontEnd to reflect what the slice correspondent
+//to the current tagSet will be named when it is saved
 String Tag::getText(){
     return buttonText;
 }
@@ -169,9 +168,7 @@ BEGIN_JUCER_METADATA
                  initialHeight="24">
   <METHODS>
     <METHOD name="mouseDrag (const MouseEvent&amp; e)"/>
-    <METHOD name="mouseEnter (const MouseEvent&amp; e)"/>
     <METHOD name="mouseDoubleClick (const MouseEvent&amp; e)"/>
-    <METHOD name="mouseExit (const MouseEvent&amp; e)"/>
     <METHOD name="mouseDown (const MouseEvent&amp; e)"/>
   </METHODS>
   <BACKGROUND backgroundColour="323e44"/>

@@ -34,7 +34,7 @@
     Describe your class and how it works here!
                                                                     //[/Comments]
 */
-class Tag  : public Component
+class Tag  : public TextButton
 {
 public:
     //==============================================================================
@@ -49,8 +49,6 @@ public:
 
     void paint (Graphics& g) override;
     void resized() override;
-    void mouseEnter (const MouseEvent& e) override;
-    void mouseExit (const MouseEvent& e) override;
     void mouseDown (const MouseEvent& e) override;
     void mouseDrag (const MouseEvent& e) override;
     void mouseDoubleClick (const MouseEvent& e) override;

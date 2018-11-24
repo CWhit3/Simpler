@@ -50,8 +50,7 @@ public:
     void renameTag(Tag* t);
     void resizeTags();
     void updateAutogenLabel();
-    void switchTagsToCurrentSlice(int index);
-
+    void switchTagsToCurrentSlice();
     Tag* tagToDelete;
     Tag* tagToRename;
     int currentSliceIndex;

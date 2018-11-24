@@ -131,7 +131,6 @@ private:
 //------------------------------------------------------------------------------
 
 class SimplePositionOverlay : public Component,
-                              public MouseListener,
                               private Timer
 {
 public:
@@ -158,6 +157,11 @@ public:
     void paint (Graphics& g) override
     {
         auto duration = transportSource.getLengthInSeconds();
+        
+        
+        //DEBUGGING
+        g.setColour(Colours::black);
+        g.drawFittedText(String(indexOfLeftMarkerOfSlice), getLocalBounds(), Justification::centred, 1.0f);
         
         //division of paint function dedicated to filling a rectangle of low opacity over the selected
         //slice of the sample by the user
@@ -218,7 +222,6 @@ public:
             if(waveformMarkers[i] == transportSource.getCurrentPosition())
                 return;
         }
-        
         waveformMarkers.push_back(transportSource.getCurrentPosition());
     }
     
@@ -242,11 +245,11 @@ public:
         }
     }
      
-    //an overridden double-click function which calculate which marker is closest the click
+    //an overridden double-click function which calculate which marker is closest to the click
     //location of the mouse and then updates the earlier indexOfLeftMarkerOfSlice variable used
     //for graphically drawing the slice of the sample that has been currently selected. Because
     //the sorting algorithm is called following each addition of a marker, the next marker which 
-    //is the right boundary of the slice is assumed to be indexOfLeftMarkerOfSlice + 1
+    //is the right boundary of the slice is always assumed to be indexOfLeftMarkerOfSlice + 1
     void mouseDoubleClick(const MouseEvent& e)override
     {
         int minDistToLeftMarker = 100000;
@@ -258,6 +261,7 @@ public:
         }
         transportSource.setPosition(waveformMarkers[indexOfLeftMarkerOfSlice]);
     }
+    
     void setTransportSourceLengthForFinalMarker(double lengthOfSampleInSeconds){
         waveformMarkers = {0.0f, lengthOfSampleInSeconds};
     }
@@ -324,6 +328,7 @@ public:
 
     ~MainContentComponent()
     {
+        this->deleteAllChildren();
         shutdownAudio();
     }
 
@@ -375,6 +380,10 @@ public:
         positionOverlay.sortMarkers();
     }
     
+    //linking method for obtaning the current slice being played in order to swap which
+    //tag set is being used for that slice of the sample. E.g. if the first slice has been
+    //selected by the user, this method is called in frontend to change the set of tags being displayed
+    //in the tagging section as the vector of tag pointers at index 0 of the 2D array tagSetFromGivenSlice
     int getSelectedSliceIndex(){
         return positionOverlay.getSelectedSliceIndex();
     }
@@ -443,6 +452,11 @@ private:
 
             if (auto* reader = formatManager.createReaderFor (file))
             {
+                addAndMakeVisible(songName);
+                songName.setBounds(130, 10, 385, 15);
+                songName.setText(file.getFileName(), juce::dontSendNotification);
+                songName.setFont(Font ("Avenir Next", 17.30f, Font::plain).withTypefaceStyle ("Regular"));
+                songName.setColour(Label::textColourId, Colour(0xff878787));
                 std::unique_ptr<AudioFormatReaderSource> newSource (new AudioFormatReaderSource (reader, true));
                 transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
                 positionOverlay.setTransportSourceLengthForFinalMarker(transportSource.getLengthInSeconds());
@@ -469,6 +483,7 @@ private:
     TextButton openButton;
     TextButton playButton;
     TextButton stopButton;
+    Label      songName;
 
     AudioFormatManager formatManager;
     std::unique_ptr<AudioFormatReaderSource> readerSource;
