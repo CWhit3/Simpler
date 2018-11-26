@@ -45,8 +45,9 @@ public:
     //[UserMethods]     -- You can add your own custom methods in this section.
     void setText(const String& newText);
     String getText();
+    Tag(String s);
     //[/UserMethods]
-
+    
     void paint (Graphics& g) override;
     void resized() override;
     void mouseDown (const MouseEvent& e) override;

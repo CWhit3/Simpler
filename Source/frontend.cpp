@@ -19,7 +19,7 @@
 
 //[Headers] You can add your own extra header files here...
 #include "Tag.h"
-#include "AudioThumbnailTutorial_04.h"
+#include "WaveformEditor.hpp"
 #include <map>
 #include <vector>
 using namespace std;
@@ -40,7 +40,6 @@ map<int, vector<Tag*>> tagSetFromGivenSlice;
 
 //the current set of tags being used for graphical updates and (eventually)
 //for the saving
-vector<Tag*> tagSet;
 
 //[/MiscUserDefs]
 
@@ -55,9 +54,15 @@ FrontEnd::FrontEnd ()
     //NOTE: the majority of this class was created by JUCE as a sample project
     //      and has been extended upon for use here
     waveformEditor = new MainContentComponent();
-    waveformEditor->setBounds(8, 216, 584, 176);
+    waveformEditor->setBounds(8, 217, 584, 155);
     addAndMakeVisible(waveformEditor);
     currentSliceIndex = -1;
+
+    tagSet = {};
+    tagToRename = nullptr;
+    tagToDelete = nullptr;
+
+
     //[/Constructor_pre]
 
     addTagButton.reset (new ImageButton ("addTagButton"));
@@ -299,11 +304,11 @@ void FrontEnd::paint (Graphics& g)
 void FrontEnd::resized()
 {
     //[UserPreResize] Add your own custom resize code here..
-    
+
     //Overriden resize function that was automatically created by the
     //Projucer software in spite of the fact that Simpler has a fixed 600x400
     //size, therefore there is no implementation of this method currently
-    
+
     //[/UserPreResize]
 
     //[UserResized] Add your own custom resize handling here..
@@ -343,8 +348,8 @@ void FrontEnd::buttonClicked (Button* buttonThatWasClicked)
         //AudioThumbnailTutorial_04.h for more information
         //LATER EXPLAIN LOGIC OF ADDING VECTORS TO MAP WHEN IT WORKS CORRECTLY
         waveformEditor->addMarkerAtCurrentPosition();
-        currentSliceIndex = waveformEditor->getSelectedSliceIndex();
-        tagSetFromGivenSlice.insert(std::map<int, vector<Tag*>>::value_type(currentSliceIndex, *new vector<Tag*>));
+        //currentSliceIndex = waveformEditor->getSelectedSliceIndex();
+        //tagSetFromGivenSlice.insert(std::map<int, vector<Tag*>>::value_type(currentSliceIndex, *new vector<Tag*>));
         reorganizeTags();
         repaint();
         //[/UserButtonCode_addMarkerButton]
@@ -364,14 +369,15 @@ void FrontEnd::buttonClicked (Button* buttonThatWasClicked)
     //[/UserbuttonClicked_Post]
 }
 
+void FrontEnd::mouseEnter (const MouseEvent& e)
+{
+    //[UserCode_mouseEnter] -- Add your code here...
+    //[/UserCode_mouseEnter]
+}
+
 void FrontEnd::mouseDown (const MouseEvent& e)
 {
     //[UserCode_mouseDown] -- Add your code here...
-
-    //DEBUGGING CODE FOR TESTING TAG SET SELECTION DUE TO INABILITY TO ACCESS PUBLIC
-    //FUNCTIONS OF FRONTEND IN THE AUDIOTHUMBNAILTUTORIAL_04
-    reorganizeTags();
-
     //[/UserCode_mouseDown]
 }
 
@@ -391,6 +397,16 @@ void FrontEnd::mouseDoubleClick (const MouseEvent& e)
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 
+
+void FrontEnd:: deleteAllCurrentTags(){
+    Array<Component*> children = getChildren();
+    for(int i = 0; i < children.size(); i++){
+        if(children[i]->getComponentID() == "Tag"){
+            this->removeChildComponent(children[i]);
+        }
+    }
+    repaint();
+}
 //Helper method called in the more general "reorganizeTags" method. this method specifically
 //iterates through the current tag set and, if the public field tagToDelete has been set to something
 //by an instance of a Tag (this implementation is because handling mouseDoubleClick() for a tag
@@ -420,7 +436,7 @@ void FrontEnd:: deleteTag(Tag* t){
 //deleteTag for more information on why it is implemented this way.
 void FrontEnd:: renameTag(Tag* t){
     String newText = tagRenameEditor->getText();
-    if(newText.isNotEmpty()){
+    if(newText.isNotEmpty() && newText != "create a new tag, then type its name and click the tag"){
         t->setText(tagRenameEditor->getText());
         t->repaint();
         tagRenameEditor->setText("");
@@ -440,7 +456,7 @@ void FrontEnd:: resizeTags(){
 
     //if no tags are available, set the tag width to 0
     else
-        fittedTagWidth = 0;
+        return;
 
     //iterate over the tags and set their widths and x posiitions to reflect the number of tags there are
     for(int i = 0; i < tagSet.size(); i++){
@@ -501,9 +517,11 @@ void FrontEnd:: switchTagsToCurrentSlice(){
 
 void FrontEnd:: reorganizeTags(){
 
+    repaint();
+
     //does not work currently but is supposed to set the tagSet to whichever
     //represents the currently selected slice of the sample
-    switchTagsToCurrentSlice();
+    //switchTagsToCurrentSlice();
 
     //handle any tag deletion that needs to occur from double-clicks on a tag
     if(tagToDelete != nullptr) deleteTag(tagToDelete);
@@ -538,6 +556,7 @@ BEGIN_JUCER_METADATA
     <METHOD name="mouseDoubleClick (const MouseEvent&amp; e)"/>
     <METHOD name="mouseDrag (const MouseEvent&amp; e)"/>
     <METHOD name="mouseDown (const MouseEvent&amp; e)"/>
+    <METHOD name="mouseEnter (const MouseEvent&amp; e)"/>
   </METHODS>
   <BACKGROUND backgroundColour="ffb4a7d6">
     <ROUNDRECT pos="8 98 584 78" cornerSize="10.00000000000000000000" fill="solid: ffcdcdcd"

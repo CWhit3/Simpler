@@ -28,6 +28,10 @@
 
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
+Tag::Tag (String s){
+    setComponentID("Tag");
+    buttonText = s;
+}
 //[/MiscUserDefs]
 
 //==============================================================================
@@ -35,6 +39,7 @@ Tag::Tag ()
 {
     //[Constructor_pre] You can add your own custom stuff here..
     buttonText = "click to rename";
+    setComponentID("Tag");
     //[/Constructor_pre]
 
 
@@ -101,10 +106,10 @@ void Tag::resized()
 void Tag::mouseDown (const MouseEvent& e)
 {
     //[UserCode_mouseDown] -- Add your code here...
-    
+
     //When the tag is clicked, the field of the FrontEnd component tagToRename
     //is set to this tag,meaning when renameTag() is called inside the reorganizeTags()
-    //function of FrontEnd,this tag will be renamed to whatever text value is in the 
+    //function of FrontEnd,this tag will be renamed to whatever text value is in the
     //renameTagEditor text editor of FrontEnd
     FrontEnd* parent = (FrontEnd*)getParentComponent();
     parent->tagToRename = this;
@@ -121,9 +126,9 @@ void Tag::mouseDrag (const MouseEvent& e)
 void Tag::mouseDoubleClick (const MouseEvent& e)
 {
     //[UserCode_mouseDoubleClick] -- Add your code here...
-    
+
     //When the tag is double clicked, the field of the FrontEnd component tagToDelete
-    //is set to this tag,meaning when deleteTag() is called inside the reorganizeTags() 
+    //is set to this tag,meaning when deleteTag() is called inside the reorganizeTags()
     //function of FrontEnd,this tag will be deleted both graphically and logically from tagSet
     FrontEnd* parent = (FrontEnd*)getParentComponent();
     parent->tagToDelete = this;

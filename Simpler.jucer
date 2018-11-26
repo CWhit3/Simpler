@@ -5,8 +5,13 @@
               pluginVST3Category="Sampler" pluginFormats="buildVST">
   <MAINGROUP id="tGzzgY" name="Simpler">
     <GROUP id="{27047ADD-DCC4-3B0D-E008-ABC8BA52E4FF}" name="Source">
-      <FILE id="usZUOE" name="AudioThumbnailTutorial_04.h" compile="0" resource="0"
-            file="Source/AudioThumbnailTutorial_04.h"/>
+      <FILE id="PT17ol" name="MarkerDragger.cpp" compile="1" resource="0"
+            file="../.Trash/MarkerDragger.cpp"/>
+      <FILE id="wttNFx" name="MarkerDragger.h" compile="0" resource="0" file="../.Trash/MarkerDragger.h"/>
+      <FILE id="IblI5k" name="WaveformEditor.cpp" compile="1" resource="0"
+            file="Source/WaveformEditor.cpp"/>
+      <FILE id="IekbOt" name="WaveformEditor.hpp" compile="0" resource="0"
+            file="Source/WaveformEditor.hpp" xcodeResource="1"/>
       <FILE id="g9IxHT" name="frontend.cpp" compile="1" resource="0" file="Source/frontend.cpp"/>
       <FILE id="Hdum4H" name="frontend.h" compile="0" resource="0" file="Source/frontend.h"/>
       <FILE id="XM6hAN" name="PluginEditor.cpp" compile="1" resource="0"

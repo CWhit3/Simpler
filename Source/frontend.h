@@ -22,7 +22,8 @@
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "Tag.h"
-#include "AudioThumbnailTutorial_04.h"
+#include <vector>
+#include "WaveformEditor.hpp"
 //[/Headers]
 
 
@@ -51,14 +52,17 @@ public:
     void resizeTags();
     void updateAutogenLabel();
     void switchTagsToCurrentSlice();
+    void deleteAllCurrentTags();
     Tag* tagToDelete;
     Tag* tagToRename;
     int currentSliceIndex;
+    std::vector<Tag*> tagSet;
     //[/UserMethods]
 
     void paint (Graphics& g) override;
     void resized() override;
     void buttonClicked (Button* buttonThatWasClicked) override;
+    void mouseEnter (const MouseEvent& e) override;
     void mouseDown (const MouseEvent& e) override;
     void mouseDrag (const MouseEvent& e) override;
     void mouseDoubleClick (const MouseEvent& e) override;
